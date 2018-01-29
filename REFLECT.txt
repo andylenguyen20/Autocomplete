@@ -1,0 +1,319 @@
+Name: Andy Nguyen
+NetID: aln20
+Hours Spent: 10 Hours
+Consulted With: NONE.
+Resources Used: NONE.
+Impressions: I like assignments that have real-life relevance like this one!
+----------------------------------------------------------------------
+Problem 1: What is the order of growth (big-Oh) of the number of compares
+(in the worst case) that each of the operations in the Autocomplete data
+type make, as a function of the number of terms N, the number of matching
+terms M, and k, the number of matches returned by topKMatches for
+BinarySearchAutocomplete?
+
+In topMatches, three things use the compare method. Two things that use the compare method are firstIndexOf and
+lastIndexOf, which are each called once and have a bigOh of log(N). The third thing that uses compare in this method
+is sorting the M-sized array of matches by weight. This sorting method has a bigOh of Mlog(M). Thus, topMatches
+calls a bigOh of MlogM + logN. K, however, is not used with the compare method at all, so it is not a part of the bigOh.
+topMatch, however has a different bigOh because instead of returning a list of values, we are only returning one value, meaning
+we don't need to sort the list of matches. Instead, it can simply go through the list of matches and find the highest value, resulting in
+a bigOh of M compared to MlogM associated with topMatches. However, weightOf, only calls firstIndexOf once, so it should
+have the same bigOh as firstIndexOf, which is log(N). In conclusion, here are the bigOhs of each method in Autocomplete data type:
+
+	topMatch: O(M + log(N))
+	topMatches: O(M*log(M) + log(N))
+	weightOf: O(log(N))
+
+Problem 2: How does the runtime of topKMatches() vary with k, assuming a fixed prefix
+and set of terms?
+
+2A BruteAutocomplete: Does not affect.
+	Here is some data that supports this (for words333333.txt):
+		Time for topKMatches("", 1) -  0.002547115551
+		Time for topKMatches("", 4) -  0.002510473864
+		Time for topKMatches("", 7) -  0.002505096596
+		Time for topKMatches("khombu", 1) -  0.003611379789
+		Time for topKMatches("khombu", 4) -  0.003438095594
+		Time for topKMatches("khombu", 7) -  0.003464936488
+		Time for topKMatches("k", 1) -  0.00267812575
+		Time for topKMatches("k", 4) -  0.002631343788
+		Time for topKMatches("k", 7) -  0.002625701706
+		Time for topKMatches("kh", 1) -  0.002636061627
+		Time for topKMatches("kh", 4) -  0.002609880736
+		Time for topKMatches("kh", 7) -  0.002636028522
+		Time for topKMatches("notarealword", 1) -  0.002357952019
+		Time for topKMatches("notarealword", 4) -  0.002407710304
+		Time for topKMatches("notarealword", 7) -  0.00247919181
+	Algorithmically, this makes sense because within the method is a for loop that looks like this:
+	
+		for (Term t : myTerms) {
+			if (!t.getWord().startsWith(prefix))
+				continue;
+			if (pq.size() < k) {
+				pq.add(t);
+			} else if (pq.peek().getWeight() < t.getWeight()) {
+				pq.remove();
+				pq.add(t);
+			}
+		}
+	
+	This loop does not depend on k, since it loops through all the terms in myTerms, rather than breaking
+	once pq.size() reaches k. Thus, this loop has a bigOh of N, the size of myTerms. The other part of the method
+	that affects runtime is this loop:
+	
+		for (int i = 0; i < numResults; i++) {
+			ret.addFirst(pq.remove().getWord());
+		}
+		
+	This loop depends on numResults, which may be either k or pq.size(). But, k can not be greater than pq.size(), so the
+	worst-case scenario for this loop is O(pq.size()), or O(M). Again, this doesn't depend on k either. 
+	
+	Overall, this method does not depend on k.
+	
+2B BinarySearchAutocomplete: Does not affect.
+	Here is some data that supports this (for words333333.txt):
+		Time for topKMatches("", 1) -  0.10312558197959183
+		Time for topKMatches("", 4) -  0.10454185520833334
+		Time for topKMatches("", 7) -  0.10666848978723405
+		Time for topKMatches("khombu", 1) -  1.835614E-6
+		Time for topKMatches("khombu", 4) -  1.644761E-6
+		Time for topKMatches("khombu", 7) -  1.707604E-6
+		Time for topKMatches("k", 1) -  0.001662258248
+		Time for topKMatches("k", 4) -  0.00162042701
+		Time for topKMatches("k", 7) -  0.001673656639
+		Time for topKMatches("kh", 1) -  1.7269032E-5
+		Time for topKMatches("kh", 4) -  1.4522231E-5
+		Time for topKMatches("kh", 7) -  1.4537342E-5
+		Time for topKMatches("notarealword", 1) -  1.805708E-6
+		Time for topKMatches("notarealword", 4) -  3.024915E-6
+		Time for topKMatches("notarealword", 7) -  2.034862E-6
+	Algorithmically, this makes sense because the worst-case scenario for k is that it is larger than M.
+	However, because the code returns a value once k reaches the size of M, there is no way for k to 
+	affect runtime more than O(M). Thus, the bigOh of topKMatches is O(MlogM + logN + M), which simplifies to
+	O(MlogM + logN).
+2C TrieAutocomplete: Does not affect.
+	Here is some data that supports this (for words333333.txt): 
+		Time for topKMatches("n", 1) -  1.2348146E-5
+		Time for topKMatches("n", 4) -  1.2618319E-5
+		Time for topKMatches("n", 7) -  1.0982092E-5
+		Time for topKMatches("ne", 1) -  4.801413E-6
+		Time for topKMatches("ne", 4) -  3.240766E-6
+		Time for topKMatches("ne", 7) -  3.570769E-6
+		Time for topKMatches("notarealword", 1) -  3.32963E-7
+		Time for topKMatches("notarealword", 4) -  3.32391E-7
+		Time for topKMatches("notarealword", 7) -  3.24715E-7
+	Algorithmically, this makes sense for similar reasons as 2B and 2C; K is always going to be less than M, so
+	the runtime is more affected by M than k.
+
+Problem 3: Look at the methods topMatch and topKMatches in BruteAutocomplete and
+BinarySearchAutocomplete and compare both their theoretical and empirical
+runtimes. Is BinarySearchAutocomplete always guaranteed to perform better
+than BruteAutocomplete? Justify your answer.
+
+For BruteAutoComplete on words333333.txt, the following data was gathered:
+	Time for topMatch("") - 0.004738601009
+	Time for topMatch("khombu") - 0.006057605108958837
+	Time for topMatch("k") - 0.005326633027689031
+	Time for topMatch("kh") - 0.003551377069
+	Time for topMatch("notarealword") - 0.00254872347
+	Time for topKMatches("", 1) -  0.00280480449
+	Time for topKMatches("", 4) -  0.00269963522
+	Time for topKMatches("", 7) -  0.002687403087
+	Time for topKMatches("khombu", 1) -  0.003680088049
+	Time for topKMatches("khombu", 4) -  0.00365353633
+	Time for topKMatches("khombu", 7) -  0.003582867111
+	Time for topKMatches("k", 1) -  0.002734428834
+	Time for topKMatches("k", 4) -  0.002853132562
+	Time for topKMatches("k", 7) -  0.002723533196
+	Time for topKMatches("kh", 1) -  0.00269073233
+	Time for topKMatches("kh", 4) -  0.002728459301
+	Time for topKMatches("kh", 7) -  0.002732251823
+	Time for topKMatches("notarealword", 1) -  0.002427091396
+	Time for topKMatches("notarealword", 4) -  0.002431593017
+	Time for topKMatches("notarealword", 7) -  0.002405653014
+
+For BinarySearchAutoComplete on words 333333.txt, the following data was gathered:
+	Time for topMatch("") - 0.12086367735714286
+	Time for topMatch("khombu") - 1.1966965E-5
+	Time for topMatch("k") - 0.001663266655
+	Time for topMatch("kh") - 1.971459E-5
+	Time for topMatch("notarealword") - 3.101524E-6
+	Time for topKMatches("", 1) -  0.1026715116122449
+	Time for topKMatches("", 4) -  0.10289605028571429
+	Time for topKMatches("", 7) -  0.10424734645833333
+	Time for topKMatches("khombu", 1) -  1.942856E-6
+	Time for topKMatches("khombu", 4) -  1.856442E-6
+	Time for topKMatches("khombu", 7) -  2.085517E-6
+	Time for topKMatches("k", 1) -  0.001612203253
+	Time for topKMatches("k", 4) -  0.001629903613
+	Time for topKMatches("k", 7) -  0.001622133753
+	Time for topKMatches("kh", 1) -  1.4443188E-5
+	Time for topKMatches("kh", 4) -  1.6971424E-5
+	Time for topKMatches("kh", 7) -  1.422442E-5
+	Time for topKMatches("notarealword", 1) -  1.862862E-6
+	Time for topKMatches("notarealword", 4) -  2.940238E-6
+	Time for topKMatches("notarealword", 7) -  1.928013E-6
+
+Theoretically, BinaryAutoComplete should have faster runtimes for topMatch and topKMatches because
+its bigOh for each of these methods is smaller than BruteAutoComplete. Experimentally, however, I found that
+topMatch ran slower for BinarySearch when the prefix was very small. Besides this, TopMatch in BinarySearch ran faster
+than Brute for all other cases. TopKMatches, however, always ran faster for BinarySearch than Brute. BinarySearch is not always 
+going to be perform better than Brute; while the bigOh of BinarySearch is much better than Brute, this is just a 
+theoretical measurement of GROWTH, not necessarily runtime. That being said, Brute may have faster runtime in some cases when there 
+are fewer terms or just shorter prefixes, even though the growth is smaller.
+
+Problem 4: For all three of the Autocompletor implementations, how does increasing the
+size of the source and increasing the size of the prefix argument affect
+the runtime of topMatch and topKMatches? 
+
+Benchmarking BruteAutocomplete...
+	Found 10000 words
+	Time to initialize - 0.005064251
+	Time for topMatch("") - 7.1682002E-5
+	Time for topMatch("robe") - 8.0266508E-5
+	Time for topMatch("r") - 7.0143214E-5
+	Time for topMatch("ro") - 7.4791192E-5
+	Time for topMatch("notarealword") - 5.84326E-5
+	Time for topKMatches("", 1) -  1.01818385E-4
+	Time for topKMatches("", 4) -  6.6011998E-5
+	Time for topKMatches("", 7) -  6.0549993E-5
+	Time for topKMatches("robe", 1) -  1.09825233E-4
+	Time for topKMatches("robe", 4) -  8.3729778E-5
+	Time for topKMatches("robe", 7) -  8.2002297E-5
+	Time for topKMatches("r", 1) -  8.1190233E-5
+	Time for topKMatches("r", 4) -  8.1527294E-5
+	Time for topKMatches("r", 7) -  8.2129481E-5
+	Time for topKMatches("ro", 1) -  8.1257147E-5
+	Time for topKMatches("ro", 4) -  8.481703E-5
+	Time for topKMatches("ro", 7) -  8.0524305E-5
+	Time for topKMatches("notarealword", 1) -  6.7280471E-5
+	Time for topKMatches("notarealword", 4) -  6.527669E-5
+	Time for topKMatches("notarealword", 7) -  6.8965488E-5
+
+	Found 17576 words
+	Time to initialize - 0.005652873
+	Time for topMatch("") - 1.24542458E-4
+	Time for topMatch("enk") - 1.01508594E-4
+	Time for topMatch("e") - 9.877799E-5
+	Time for topMatch("en") - 9.8355604E-5
+	Time for topMatch("notarealword") - 8.7819173E-5
+	Time for topKMatches("", 1) -  1.39368862E-4
+	Time for topKMatches("", 4) -  9.7284861E-5
+	Time for topKMatches("", 7) -  8.9551864E-5
+	Time for topKMatches("enk", 1) -  1.61596034E-4
+	Time for topKMatches("enk", 4) -  1.00207071E-4
+	Time for topKMatches("enk", 7) -  1.01292057E-4
+	Time for topKMatches("e", 1) -  9.8536436E-5
+	Time for topKMatches("e", 4) -  1.0306438E-4
+	Time for topKMatches("e", 7) -  9.8543211E-5
+	Time for topKMatches("en", 1) -  9.3766457E-5
+	Time for topKMatches("en", 4) -  9.5759994E-5
+	Time for topKMatches("en", 7) -  9.2834126E-5
+	Time for topKMatches("notarealword", 1) -  7.7291151E-5
+	Time for topKMatches("notarealword", 4) -  7.3069738E-5
+	Time for topKMatches("notarealword", 7) -  7.5895079E-5
+
+Benchmarking BinarySearchAutocomplete...
+	Benchmarking BinarySearchAutocomplete...
+	Found 10000 words
+	Time to initialize - 0.020259273
+	Time for topMatch("") - 3.4484774E-5
+	Time for topMatch("robe") - 7.348377E-6
+	Time for topMatch("r") - 4.512803E-6
+	Time for topMatch("ro") - 7.447063E-6
+	Time for topMatch("notarealword") - 7.108273E-6
+	Time for topKMatches("", 1) -  0.002319369524
+	Time for topKMatches("", 4) -  0.001760974303
+	Time for topKMatches("", 7) -  0.001704562064
+	Time for topKMatches("robe", 1) -  1.851476E-6
+	Time for topKMatches("robe", 4) -  2.036933E-6
+	Time for topKMatches("robe", 7) -  2.604351E-6
+	Time for topKMatches("r", 1) -  5.072087E-5
+	Time for topKMatches("r", 4) -  4.701949E-5
+	Time for topKMatches("r", 7) -  4.8471335E-5
+	Time for topKMatches("ro", 1) -  5.496056E-6
+	Time for topKMatches("ro", 4) -  4.686102E-6
+	Time for topKMatches("ro", 7) -  4.524545E-6
+	Time for topKMatches("notarealword", 1) -  4.893102E-6
+	Time for topKMatches("notarealword", 4) -  5.381856E-6
+	Time for topKMatches("notarealword", 7) -  3.588667E-6
+
+	Found 17576 words
+	Time to initialize - 0.007501698
+	Time for topMatch("") - 5.8650412E-5
+	Time for topMatch("enk") - 1.0308896E-5
+	Time for topMatch("e") - 5.123364E-6
+	Time for topMatch("en") - 6.609235E-6
+	Time for topMatch("notarealword") - 8.343184E-6
+	Time for topKMatches("", 1) -  0.003920628735
+	Time for topKMatches("", 4) -  0.003306195046
+	Time for topKMatches("", 7) -  0.00323369452
+	Time for topKMatches("enk", 1) -  1.788776E-6
+	Time for topKMatches("enk", 4) -  1.330082E-6
+	Time for topKMatches("enk", 7) -  1.354251E-6
+	Time for topKMatches("e", 1) -  9.8345811E-5
+	Time for topKMatches("e", 4) -  7.0284221E-5
+	Time for topKMatches("e", 7) -  6.2965004E-5
+	Time for topKMatches("en", 1) -  2.726728E-6
+	Time for topKMatches("en", 4) -  2.41511E-6
+	Time for topKMatches("en", 7) -  3.339397E-6
+	Time for topKMatches("notarealword", 1) -  3.024882E-6
+	Time for topKMatches("notarealword", 4) -  1.279291E-6
+	Time for topKMatches("notarealword", 7) -  1.580186E-6
+
+
+Benchmarking TrieAutocomplete...
+	Created 475255 nodes
+	Time for topMatch("") - 5.672753E-6
+	Time for topMatch("nenk") - 6.63241E-7
+	Time for topMatch("n") - 3.552537E-6
+	Time for topMatch("ne") - 3.14041E-6
+	Time for topMatch("notarealword") - 5.82495E-7
+	Time for topKMatches("", 1) -  3.5990255E-5
+	Time for topKMatches("", 4) -  1.8227665E-5
+	Time for topKMatches("", 7) -  1.9280951E-5
+	Time for topKMatches("nenk", 1) -  7.03446E-7
+	Time for topKMatches("nenk", 4) -  5.40229E-7
+	Time for topKMatches("nenk", 7) -  4.13011E-7
+	Time for topKMatches("n", 1) -  8.732485E-6
+	Time for topKMatches("n", 4) -  1.0614051E-5
+	Time for topKMatches("n", 7) -  9.977055E-6
+	Time for topKMatches("ne", 1) -  3.280593E-6
+	Time for topKMatches("ne", 4) -  5.251765E-6
+	Time for topKMatches("ne", 7) -  3.527932E-6
+	Time for topKMatches("notarealword", 1) -  5.9101E-7
+	Time for topKMatches("notarealword", 4) -  4.11704E-7
+	Time for topKMatches("notarealword", 7) -  6.00315E-7
+
+	Created 237628 nodes
+	Time for topMatch("") - 5.368009E-6
+	Time for topMatch("aenk") - 5.93072E-7
+	Time for topMatch("a") - 3.116486E-6
+	Time for topMatch("ae") - 2.838038E-6
+	Time for topMatch("notarealword") - 2.16651E-7
+	Time for topKMatches("", 1) -  3.1539006E-5
+	Time for topKMatches("", 4) -  1.6268227E-5
+	Time for topKMatches("", 7) -  1.3248982E-5
+	Time for topKMatches("aenk", 1) -  6.58958E-7
+	Time for topKMatches("aenk", 4) -  7.40871E-7
+	Time for topKMatches("aenk", 7) -  5.78631E-7
+	Time for topKMatches("a", 1) -  8.036019E-6
+	Time for topKMatches("a", 4) -  8.913959E-6
+	Time for topKMatches("a", 7) -  7.523554E-6
+	Time for topKMatches("ae", 1) -  4.229329E-6
+	Time for topKMatches("ae", 4) -  4.099684E-6
+	Time for topKMatches("ae", 7) -  5.122634E-6
+	Time for topKMatches("notarealword", 1) -  1.43116E-7
+	Time for topKMatches("notarealword", 4) -  1.3481E-7
+	Time for topKMatches("notarealword", 7) -  1.30418E-7
+
+4A BruteAutocomplete: Increasing the size of the prefix argument marginally decreases affect runtime. This makes sense since the method loops through
+the entire list of terms irregardless of prefix length. However, increasing the size of the source
+increases the runtime proportionally for both. This makes sense, since the runtime of these methods is O(MlogM + N), where N is the size of the source.
+4B BinarySearchAutocomplete: Increasing the size of the prefix decreases runtime. This makes sense since longer prefixes usually correspond to fewer matching terms,
+resulting in a shorter runtime. Increasing the size of the source only marginally increases
+the runtimes for both. This makes sense, since the runtime of these methods is O(MlogM + logN), where N is the size of the source.
+4C TrieAutocomplete: Increasing the size of the prefix decreases runtime. This makes sense since longer prefixes usually correspond to fewer matching terms,
+resulting in a shorter runtime. Increasing the size of the source does not affect runtime. This makes sense since
+the way the Trie data structure is, the methods search through the tree by following the characters that match the prefix rather than searching through a list
+of terms.
